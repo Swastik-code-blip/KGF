@@ -31,7 +31,8 @@
       </div>
       <div class="col-6 col-md-4">
         <label class="form-label">Payment Date / भुगतान तारीख</label>
-        <input type="text" name="pymt_date" class="form-control" value="{{ rec.pymt_date if rec else '' }}" placeholder="DD/MM/YYYY">
+        <input type="date" name="pymt_date" class="form-control datepicker"
+               value="{{ rec.pymt_date.strftime('%Y-%m-%d') if rec and rec.pymt_date else '' }}">
       </div>
       <div class="col-6 col-md-4">
         <label class="form-label">Status / स्थिति</label>

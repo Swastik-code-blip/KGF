@@ -41,14 +41,6 @@
         <label class="form-label">Amount / राशि (₹)</label>
         <input type="number" name="amount" class="form-control" value="{{ rec.amount if rec else '' }}">
       </div>
-      <div class="col-6 col-md-4">
-        <label class="form-label">Topup Amount / टॉपअप</label>
-        <input type="number" name="topup_amount" class="form-control" value="{{ rec.topup_amount if rec else '' }}">
-      </div>
-      <div class="col-6 col-md-4">
-        <label class="form-label">Available Balance / उपलब्ध राशि</label>
-        <input type="number" name="avail_balance" class="form-control" value="{{ rec.avail_balance if rec else '' }}">
-      </div>
 
       <div class="col-6 col-md-4">
         <label class="form-label">Status / स्थिति <span class="text-danger">*</span></label>
@@ -64,17 +56,17 @@
         <input type="text" name="payments" class="form-control"
                value="{{ rec.payments if rec else '' }}" placeholder="HDFC / SBI / UPI...">
       </div>
+
       <div class="col-6 col-md-4">
         <label class="form-label">Date / तारीख</label>
-        <input type="date" name="date" class="form-control"
-               value="{{ rec.date if rec else '' }}">
+        <input type="date" name="date" class="form-control datepicker"
+               value="{{ rec.date.strftime('%Y-%m-%d') if rec and rec.date else '' }}">
       </div>
-
-      <div class="col-12 col-md-6">
-        <label class="form-label">Leader Name / लीडर नाम</label>
-        <input type="text" name="leader_name" class="form-control" value="{{ rec.leader_name if rec else '' }}">
+      <div class="col-12 col-md-4">
+        <label class="form-label">Manager Name / मैनेजर नाम</label>
+        <input type="text" name="manager_name" class="form-control" value="{{ rec.manager_name if rec else '' }}">
       </div>
-      <div class="col-12 col-md-6">
+      <div class="col-12 col-md-4">
         <label class="form-label">Pay Confirmed By / किसने कन्फर्म किया</label>
         <input type="text" name="pay_confirm_by" class="form-control" value="{{ rec.pay_confirm_by if rec else '' }}">
       </div>
@@ -85,7 +77,8 @@
       </div>
       <div class="col-6 col-md-6">
         <label class="form-label">Payment Date / भुगतान तारीख</label>
-        <input type="text" name="payment_date" class="form-control" value="{{ rec.payment_date if rec else '' }}">
+        <input type="date" name="payment_date" class="form-control datepicker"
+               value="{{ rec.payment_date.strftime('%Y-%m-%d') if rec and rec.payment_date else '' }}">
       </div>
       <div class="col-6 col-md-6">
         <label class="form-label">Remark / टिप्पणी</label>

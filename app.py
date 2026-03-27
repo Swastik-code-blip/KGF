@@ -6,21 +6,27 @@ from functools import wraps
 import pandas as pd
 import io
 import os
+import shutil
+import json
 
 app = Flask(__name__)
 app.secret_key = 'kgf-portal-secret-key-change-this'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///kgf_portal.db'
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+INSTANCE_DIR = os.path.join(BASE_DIR, 'instance')
+os.makedirs(INSTANCE_DIR, exist_ok=True)
+DB_PATH = os.path.join(INSTANCE_DIR, 'kgf_portal.db')
+
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_PATH}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
-
-# ─── MODELS ───────────────────────────────────────────────────────────────────
 
 class User(db.Model):
     id       = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
-    role     = db.Column(db.String(20), nullable=False)  # admin / leader / agent
+    role     = db.Column(db.String(20), nullable=False)  # admin / manager / agent
     name     = db.Column(db.String(120))
     created  = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -30,21 +36,27 @@ class Activation(db.Model):
     kgf_id           = db.Column(db.String(20))
     member_name      = db.Column(db.String(120))
     amount           = db.Column(db.Float)
-    topup_amount     = db.Column(db.Float)
-    avail_balance    = db.Column(db.Float)
     contact          = db.Column(db.String(20))
     state            = db.Column(db.String(50))
     dist             = db.Column(db.String(50))
     status           = db.Column(db.String(30))
     payments         = db.Column(db.String(50))
-    leader_name      = db.Column(db.String(100))
+    manager_name     = db.Column(db.String(100))
     date             = db.Column(db.Date)
     remark           = db.Column(db.String(200))
     utr_no           = db.Column(db.String(200))
     pay_confirm_by   = db.Column(db.String(100))
-    payment_date     = db.Column(db.String(50))
+    payment_date     = db.Column(db.Date)
     created_by       = db.Column(db.String(80))
     created_at       = db.Column(db.DateTime, default=datetime.utcnow)
+
+class EditHistory(db.Model):
+    id           = db.Column(db.Integer, primary_key=True)
+    table_name   = db.Column(db.String(50))
+    record_id    = db.Column(db.Integer)
+    edited_by    = db.Column(db.String(80))
+    edited_at    = db.Column(db.DateTime, default=datetime.utcnow)
+    changes      = db.Column(db.Text)
 
 class Cheque(db.Model):
     id               = db.Column(db.Integer, primary_key=True)
@@ -55,8 +67,8 @@ class Cheque(db.Model):
     dist             = db.Column(db.String(50))
     cheque_status    = db.Column(db.String(30))
     cheque_no        = db.Column(db.String(50))
-    cheque_date      = db.Column(db.String(30))
-    due_date         = db.Column(db.String(30))
+    cheque_date      = db.Column(db.Date)
+    due_date         = db.Column(db.Date)
     package          = db.Column(db.String(50))
     agreement_status = db.Column(db.String(30))
     remarks          = db.Column(db.String(200))
@@ -70,7 +82,7 @@ class Payout(db.Model):
     ifsc        = db.Column(db.String(20))
     amount      = db.Column(db.Float)
     userid      = db.Column(db.String(20))
-    pymt_date   = db.Column(db.String(30))
+    pymt_date   = db.Column(db.Date)
     bank        = db.Column(db.String(50))
     status      = db.Column(db.String(30))
     utr         = db.Column(db.String(50))
@@ -84,7 +96,7 @@ class Query(db.Model):
     contact           = db.Column(db.String(20))
     state             = db.Column(db.String(50))
     dist              = db.Column(db.String(50))
-    date              = db.Column(db.String(30))
+    date              = db.Column(db.Date)
     query_type        = db.Column(db.String(50))
     call_attender     = db.Column(db.String(100))
     department        = db.Column(db.String(50))
@@ -95,8 +107,6 @@ class Query(db.Model):
     followup3         = db.Column(db.String(200))
     created_by        = db.Column(db.String(80))
     created_at        = db.Column(db.DateTime, default=datetime.utcnow)
-
-# ─── AUTH HELPERS ──────────────────────────────────────────────────────────────
 
 def login_required(f):
     @wraps(f)
@@ -117,7 +127,31 @@ def role_required(*roles):
         return decorated
     return decorator
 
-# ─── AUTH ROUTES ──────────────────────────────────────────────────────────────
+def parse_date(val):
+    if not val or str(val).strip() == '':
+        return None
+    for fmt in ('%Y-%m-%d', '%d-%m-%Y', '%d/%m/%Y'):
+        try:
+            return datetime.strptime(str(val).strip(), fmt).date()
+        except ValueError:
+            continue
+    return None
+
+def record_edit(table_name, record_id, old_dict, new_dict):
+    changes = {}
+    for k in new_dict:
+        old_val = str(old_dict.get(k, ''))
+        new_val = str(new_dict.get(k, ''))
+        if old_val != new_val:
+            changes[k] = {'from': old_val, 'to': new_val}
+    if changes:
+        h = EditHistory(
+            table_name=table_name,
+            record_id=record_id,
+            edited_by=session.get('username', '?'),
+            changes=json.dumps(changes, ensure_ascii=False)
+        )
+        db.session.add(h)
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
@@ -139,8 +173,6 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
-# ─── DASHBOARD ────────────────────────────────────────────────────────────────
-
 @app.route('/dashboard')
 @login_required
 def dashboard():
@@ -155,8 +187,6 @@ def dashboard():
     }
     recent = Activation.query.order_by(Activation.created_at.desc()).limit(5).all()
     return render_template('dashboard.html', stats=stats, recent=recent)
-
-# ─── ACTIVATIONS ──────────────────────────────────────────────────────────────
 
 @app.route('/activations')
 @login_required
@@ -188,14 +218,13 @@ def add_activation():
         rec = Activation(
             kgf_serial=f.get('kgf_serial') or None,
             kgf_id=f['kgf_id'], member_name=f['member_name'],
-            amount=f.get('amount') or 0, topup_amount=f.get('topup_amount') or 0,
-            avail_balance=f.get('avail_balance') or 0,
+            amount=f.get('amount') or 0,
             contact=f['contact'], state=f['state'], dist=f.get('dist'),
             status=f['status'], payments=f.get('payments'),
-            leader_name=f.get('leader_name'), remark=f.get('remark'),
+            manager_name=f.get('manager_name'), remark=f.get('remark'),
             utr_no=f.get('utr_no'), pay_confirm_by=f.get('pay_confirm_by'),
-            payment_date=f.get('payment_date'),
-            date=datetime.strptime(f['date'], '%Y-%m-%d').date() if f.get('date') else None,
+            payment_date=parse_date(f.get('payment_date')),
+            date=parse_date(f.get('date')),
             created_by=session['username'])
         db.session.add(rec)
         db.session.commit()
@@ -206,18 +235,23 @@ def add_activation():
 @app.route('/activations/edit/<int:rid>', methods=['GET', 'POST'])
 @login_required
 def edit_activation(rid):
+    if session.get('role') == 'agent':
+        flash('Agents cannot edit records / एजेंट संपादन नहीं कर सकते', 'danger')
+        return redirect(url_for('activations'))
     rec = Activation.query.get_or_404(rid)
     if request.method == 'POST':
         f = request.form
+        old = {k: str(getattr(rec, k)) for k in ['kgf_id','member_name','amount','contact','state','dist','status','payments','manager_name','remark','utr_no','pay_confirm_by','payment_date','date']}
         rec.kgf_id=f['kgf_id']; rec.member_name=f['member_name']
-        rec.amount=f.get('amount') or 0; rec.topup_amount=f.get('topup_amount') or 0
-        rec.avail_balance=f.get('avail_balance') or 0
+        rec.amount=f.get('amount') or 0
         rec.contact=f['contact']; rec.state=f['state']; rec.dist=f.get('dist')
         rec.status=f['status']; rec.payments=f.get('payments')
-        rec.leader_name=f.get('leader_name'); rec.remark=f.get('remark')
+        rec.manager_name=f.get('manager_name'); rec.remark=f.get('remark')
         rec.utr_no=f.get('utr_no'); rec.pay_confirm_by=f.get('pay_confirm_by')
-        rec.payment_date=f.get('payment_date')
-        rec.date=datetime.strptime(f['date'], '%Y-%m-%d').date() if f.get('date') else None
+        rec.payment_date=parse_date(f.get('payment_date'))
+        rec.date=parse_date(f.get('date'))
+        new = {k: str(getattr(rec, k)) for k in ['kgf_id','member_name','amount','contact','state','dist','status','payments','manager_name','remark','utr_no','pay_confirm_by','payment_date','date']}
+        record_edit('activation', rid, old, new)
         db.session.commit()
         flash('Record updated / अपडेट हो गया ✓', 'success')
         return redirect(url_for('activations'))
@@ -245,22 +279,20 @@ def import_activations():
     count = 0
     for _, row in df.iterrows():
         if pd.isna(row.get('ID')): continue
+        lname = row.get('MANAGER NAME', row.get('LEADER NAME', ''))
         rec = Activation(
             kgf_serial=row.get('kgf'), kgf_id=str(row.get('ID','')),
             member_name=str(row.get('Name','')),
             amount=row.get('Amount') if pd.notna(row.get('Amount')) else 0,
-            topup_amount=row.get('Topup Amount') if pd.notna(row.get('Topup Amount')) else 0,
-            avail_balance=row.get('AVAILABLE BALANCE') if pd.notna(row.get('AVAILABLE BALANCE')) else 0,
             contact=str(row.get('Contact NO','')),
             state=str(row.get('STATE','')) if pd.notna(row.get('STATE')) else '',
             dist=str(row.get('Dist','')) if pd.notna(row.get('Dist')) else '',
             status=str(row.get('STATUS','')) if pd.notna(row.get('STATUS')) else '',
             payments=str(row.get('PAYMENTS','')) if pd.notna(row.get('PAYMENTS')) else '',
-            leader_name=str(row.get('LEADER NAME','')) if pd.notna(row.get('LEADER NAME')) else '',
+            manager_name=str(lname) if pd.notna(lname) else '',
             remark=str(row.get('REMARK','')) if pd.notna(row.get('REMARK')) else '',
             utr_no=str(row.get('UTR NO','')) if pd.notna(row.get('UTR NO')) else '',
             pay_confirm_by=str(row.get('PAY CONFIRM BY','')) if pd.notna(row.get('PAY CONFIRM BY')) else '',
-            payment_date=str(row.get('PAYMENT DATE','')) if pd.notna(row.get('PAYMENT DATE')) else '',
             created_by='import')
         db.session.add(rec); count += 1
     db.session.commit()
@@ -271,22 +303,33 @@ def import_activations():
 @login_required
 def export_activations():
     records = Activation.query.all()
-    data = [{
-        'S.No': r.kgf_serial, 'KGF ID': r.kgf_id, 'Name': r.member_name,
-        'Amount': r.amount, 'Topup': r.topup_amount, 'Balance': r.avail_balance,
-        'Contact': r.contact, 'State': r.state, 'Dist': r.dist,
-        'Status': r.status, 'Payment Mode': r.payments, 'Leader': r.leader_name,
-        'Date': r.date, 'Remark': r.remark, 'UTR No': r.utr_no,
-        'Confirmed By': r.pay_confirm_by, 'Payment Date': r.payment_date
-    } for r in records]
-    df = pd.DataFrame(data)
-    buf = io.BytesIO()
-    df.to_excel(buf, index=False)
-    buf.seek(0)
-    return send_file(buf, download_name='activations_export.xlsx',
-                     as_attachment=True, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    data = [{'S.No': r.kgf_serial, 'KGF ID': r.kgf_id, 'Name': r.member_name,
+              'Amount': r.amount, 'Contact': r.contact, 'State': r.state, 'Dist': r.dist,
+              'Status': r.status, 'Payment Mode': r.payments, 'Manager': r.manager_name,
+              'Date': r.date, 'Remark': r.remark, 'UTR No': r.utr_no,
+              'Confirmed By': r.pay_confirm_by, 'Payment Date': r.payment_date} for r in records]
+    df = pd.DataFrame(data); buf = io.BytesIO()
+    df.to_excel(buf, index=False); buf.seek(0)
+    return send_file(buf, download_name='activations_export.xlsx', as_attachment=True,
+                     mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
-# ─── CHEQUE ───────────────────────────────────────────────────────────────────
+@app.route('/edit-history')
+@login_required
+@role_required('admin', 'manager')
+def edit_history():
+    table = request.args.get('table', '')
+    query = EditHistory.query
+    if table:
+        query = query.filter_by(table_name=table)
+    records = query.order_by(EditHistory.edited_at.desc()).limit(300).all()
+    parsed = []
+    for h in records:
+        try:
+            changes = json.loads(h.changes)
+        except Exception:
+            changes = {}
+        parsed.append({'h': h, 'changes': changes})
+    return render_template('edit_history.html', records=parsed, table=table)
 
 @app.route('/cheques')
 @login_required
@@ -309,7 +352,8 @@ def add_cheque():
         rec = Cheque(member_name=f['member_name'], contact=f['contact'],
                      kgf_id=f['kgf_id'], state=f['state'], dist=f.get('dist'),
                      cheque_status=f['cheque_status'], cheque_no=f.get('cheque_no'),
-                     cheque_date=f.get('cheque_date'), due_date=f.get('due_date'),
+                     cheque_date=parse_date(f.get('cheque_date')),
+                     due_date=parse_date(f.get('due_date')),
                      package=f.get('package'), agreement_status=f.get('agreement_status'),
                      remarks=f.get('remarks'), created_by=session['username'])
         db.session.add(rec); db.session.commit()
@@ -320,19 +364,35 @@ def add_cheque():
 @app.route('/cheques/edit/<int:rid>', methods=['GET', 'POST'])
 @login_required
 def edit_cheque(rid):
+    if session.get('role') == 'agent':
+        flash('Agents cannot edit / एजेंट संपादन नहीं कर सकते', 'danger')
+        return redirect(url_for('cheques'))
     rec = Cheque.query.get_or_404(rid)
     if request.method == 'POST':
         f = request.form
+        old = {k: str(getattr(rec, k)) for k in ['member_name','contact','kgf_id','cheque_status','cheque_no','cheque_date','due_date']}
         rec.member_name=f['member_name']; rec.contact=f['contact']
         rec.kgf_id=f['kgf_id']; rec.state=f['state']; rec.dist=f.get('dist')
         rec.cheque_status=f['cheque_status']; rec.cheque_no=f.get('cheque_no')
-        rec.cheque_date=f.get('cheque_date'); rec.due_date=f.get('due_date')
+        rec.cheque_date=parse_date(f.get('cheque_date'))
+        rec.due_date=parse_date(f.get('due_date'))
         rec.package=f.get('package'); rec.agreement_status=f.get('agreement_status')
         rec.remarks=f.get('remarks')
+        new = {k: str(getattr(rec, k)) for k in ['member_name','contact','kgf_id','cheque_status','cheque_no','cheque_date','due_date']}
+        record_edit('cheque', rid, old, new)
         db.session.commit()
         flash('Updated / अपडेट हो गया ✓', 'success')
         return redirect(url_for('cheques'))
     return render_template('cheque_form.html', rec=rec)
+
+@app.route('/cheques/delete/<int:rid>', methods=['POST'])
+@login_required
+@role_required('admin')
+def delete_cheque(rid):
+    db.session.delete(Cheque.query.get_or_404(rid))
+    db.session.commit()
+    flash('Deleted / हटाया गया', 'warning')
+    return redirect(url_for('cheques'))
 
 @app.route('/cheques/export')
 @login_required
@@ -347,8 +407,6 @@ def export_cheques():
     df.to_excel(buf, index=False); buf.seek(0)
     return send_file(buf, download_name='cheques_export.xlsx', as_attachment=True,
                      mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-
-# ─── PAYOUTS ──────────────────────────────────────────────────────────────────
 
 @app.route('/payouts')
 @login_required
@@ -366,13 +424,13 @@ def payouts():
 
 @app.route('/payouts/add', methods=['GET', 'POST'])
 @login_required
-@role_required('admin', 'leader')
+@role_required('admin', 'manager')
 def add_payout():
     if request.method == 'POST':
         f = request.form
         rec = Payout(benf_name=f['benf_name'], acc_no=f['acc_no'], ifsc=f['ifsc'],
                      amount=f.get('amount') or 0, userid=f['userid'],
-                     pymt_date=f.get('pymt_date'), bank=f.get('bank'),
+                     pymt_date=parse_date(f.get('pymt_date')), bank=f.get('bank'),
                      status=f.get('status','Pending'), utr=f.get('utr'),
                      remarks=f.get('remarks'), created_by=session['username'])
         db.session.add(rec); db.session.commit()
@@ -382,19 +440,31 @@ def add_payout():
 
 @app.route('/payouts/edit/<int:rid>', methods=['GET', 'POST'])
 @login_required
-@role_required('admin', 'leader')
+@role_required('admin', 'manager')
 def edit_payout(rid):
     rec = Payout.query.get_or_404(rid)
     if request.method == 'POST':
         f = request.form
+        old = {k: str(getattr(rec, k)) for k in ['benf_name','amount','status','pymt_date']}
         rec.benf_name=f['benf_name']; rec.acc_no=f['acc_no']; rec.ifsc=f['ifsc']
         rec.amount=f.get('amount') or 0; rec.userid=f['userid']
-        rec.pymt_date=f.get('pymt_date'); rec.bank=f.get('bank')
+        rec.pymt_date=parse_date(f.get('pymt_date')); rec.bank=f.get('bank')
         rec.status=f.get('status','Pending'); rec.utr=f.get('utr'); rec.remarks=f.get('remarks')
+        new = {k: str(getattr(rec, k)) for k in ['benf_name','amount','status','pymt_date']}
+        record_edit('payout', rid, old, new)
         db.session.commit()
         flash('Updated / अपडेट हो गया ✓', 'success')
         return redirect(url_for('payouts'))
     return render_template('payout_form.html', rec=rec)
+
+@app.route('/payouts/delete/<int:rid>', methods=['POST'])
+@login_required
+@role_required('admin')
+def delete_payout(rid):
+    db.session.delete(Payout.query.get_or_404(rid))
+    db.session.commit()
+    flash('Deleted / हटाया गया', 'warning')
+    return redirect(url_for('payouts'))
 
 @app.route('/payouts/export')
 @login_required
@@ -407,8 +477,6 @@ def export_payouts():
     df.to_excel(buf, index=False); buf.seek(0)
     return send_file(buf, download_name='payouts_export.xlsx', as_attachment=True,
                      mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-
-# ─── QUERIES ──────────────────────────────────────────────────────────────────
 
 @app.route('/queries')
 @login_required
@@ -429,7 +497,8 @@ def add_query():
     if request.method == 'POST':
         f = request.form
         rec = Query(member_name=f['member_name'], contact=f['contact'],
-                    state=f.get('state'), dist=f.get('dist'), date=f.get('date'),
+                    state=f.get('state'), dist=f.get('dist'),
+                    date=parse_date(f.get('date')),
                     query_type=f.get('query_type'), call_attender=f.get('call_attender'),
                     department=f.get('department'), remarks=f.get('remarks'),
                     status=f.get('status','open'), followup1=f.get('followup1'),
@@ -443,15 +512,22 @@ def add_query():
 @app.route('/queries/edit/<int:rid>', methods=['GET', 'POST'])
 @login_required
 def edit_query(rid):
+    if session.get('role') == 'agent':
+        flash('Agents cannot edit / एजेंट संपादन नहीं कर सकते', 'danger')
+        return redirect(url_for('queries'))
     rec = Query.query.get_or_404(rid)
     if request.method == 'POST':
         f = request.form
+        old = {k: str(getattr(rec, k)) for k in ['member_name','status','remarks','date']}
         rec.member_name=f['member_name']; rec.contact=f['contact']
-        rec.state=f.get('state'); rec.dist=f.get('dist'); rec.date=f.get('date')
+        rec.state=f.get('state'); rec.dist=f.get('dist')
+        rec.date=parse_date(f.get('date'))
         rec.query_type=f.get('query_type'); rec.call_attender=f.get('call_attender')
         rec.department=f.get('department'); rec.remarks=f.get('remarks')
         rec.status=f.get('status','open'); rec.followup1=f.get('followup1')
         rec.followup2=f.get('followup2'); rec.followup3=f.get('followup3')
+        new = {k: str(getattr(rec, k)) for k in ['member_name','status','remarks','date']}
+        record_edit('query', rid, old, new)
         db.session.commit()
         flash('Updated / अपडेट हो गया ✓', 'success')
         return redirect(url_for('queries'))
@@ -466,7 +542,14 @@ def close_query(rid):
     flash('Query closed / क्वेरी बंद हुई ✓', 'success')
     return redirect(url_for('queries'))
 
-# ─── USER MANAGEMENT (admin only) ─────────────────────────────────────────────
+@app.route('/queries/delete/<int:rid>', methods=['POST'])
+@login_required
+@role_required('admin')
+def delete_query(rid):
+    db.session.delete(Query.query.get_or_404(rid))
+    db.session.commit()
+    flash('Deleted / हटाया गया', 'warning')
+    return redirect(url_for('queries'))
 
 @app.route('/users')
 @login_required
@@ -518,7 +601,36 @@ def delete_user(uid):
     flash('User deleted / हटाया गया', 'warning')
     return redirect(url_for('users'))
 
-# ─── INIT DB ──────────────────────────────────────────────────────────────────
+@app.route('/backup/download')
+@login_required
+@role_required('admin')
+def backup_download():
+    if not os.path.exists(DB_PATH):
+        flash('Database file not found / डेटाबेस फाइल नहीं मिली', 'danger')
+        return redirect(url_for('dashboard'))
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    return send_file(DB_PATH, download_name=f'kgf_backup_{timestamp}.db',
+                     as_attachment=True, mimetype='application/octet-stream')
+
+@app.route('/backup/restore', methods=['POST'])
+@login_required
+@role_required('admin')
+def backup_restore():
+    f = request.files.get('backup_file')
+    if not f or not f.filename.endswith('.db'):
+        flash('Please upload a valid .db backup file / कृपया .db फाइल अपलोड करें', 'danger')
+        return redirect(url_for('dashboard'))
+    safety = DB_PATH + '.bak'
+    if os.path.exists(DB_PATH):
+        shutil.copy2(DB_PATH, safety)
+    try:
+        f.save(DB_PATH)
+        flash('Database restored! / डेटाबेस रिस्टोर हो गया ✓ — Please restart the app.', 'success')
+    except Exception as e:
+        if os.path.exists(safety):
+            shutil.copy2(safety, DB_PATH)
+        flash(f'Restore failed / रिस्टोर विफल: {e}', 'danger')
+    return redirect(url_for('dashboard'))
 
 def init_db():
     with app.app_context():
@@ -528,6 +640,7 @@ def init_db():
                                 role='admin', password=generate_password_hash('admin123')))
             db.session.commit()
             print("✓ Default admin created: admin / admin123")
+        print(f"✓ Database path: {DB_PATH}")
 
 if __name__ == '__main__':
     init_db()

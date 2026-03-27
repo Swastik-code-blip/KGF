@@ -48,11 +48,13 @@
       </div>
       <div class="col-6 col-md-4">
         <label class="form-label">Cheque Date / चेक तारीख</label>
-        <input type="text" name="cheque_date" class="form-control" value="{{ rec.cheque_date if rec else '' }}" placeholder="DD/MM/YYYY">
+        <input type="date" name="cheque_date" class="form-control datepicker"
+               value="{{ rec.cheque_date.strftime('%Y-%m-%d') if rec and rec.cheque_date else '' }}">
       </div>
       <div class="col-6 col-md-4">
         <label class="form-label">Due Date / देय तारीख</label>
-        <input type="text" name="due_date" class="form-control" value="{{ rec.due_date if rec else '' }}" placeholder="DD/MM/YYYY">
+        <input type="date" name="due_date" class="form-control datepicker"
+               value="{{ rec.due_date.strftime('%Y-%m-%d') if rec and rec.due_date else '' }}">
       </div>
       <div class="col-6 col-md-4">
         <label class="form-label">Package / पैकेज</label>

@@ -23,11 +23,13 @@
       transition: transform .3s;
     }
     .sidebar-brand {
-      padding: 1.2rem 1rem; background: var(--kgf-blue);
+      padding: .8rem 1rem; background: var(--kgf-blue);
       border-bottom: 2px solid var(--kgf-gold);
+      display: flex; align-items: center; gap: .6rem;
     }
-    .sidebar-brand h5 { color: var(--kgf-gold); margin: 0; font-weight: 700; }
-    .sidebar-brand small { color: #aaa; font-size: 0.7rem; }
+    .sidebar-logo { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid var(--kgf-gold); flex-shrink: 0; }
+    .sidebar-brand h5 { color: var(--kgf-gold); margin: 0; font-weight: 700; font-size: .95rem; }
+    .sidebar-brand small { color: #aaa; font-size: 0.68rem; }
     .nav-section { color: #888; font-size: 0.68rem; letter-spacing: 1px;
                    padding: .7rem 1rem .2rem; text-transform: uppercase; }
     #sidebar .nav-link {
@@ -110,8 +112,12 @@
 <!-- SIDEBAR -->
 <div id="sidebar">
   <div class="sidebar-brand">
-    <h5><i class="fa-solid fa-crown me-2"></i>KGF Portal</h5>
-    <small>Registration Management System</small>
+    <img src="{{ url_for('static', filename='logo.jpg') }}" alt="KGF Logo" class="sidebar-logo"
+         onerror="this.style.display='none'">
+    <div>
+      <h5>KGF Portal</h5>
+      <small>Registration Management</small>
+    </div>
   </div>
 
   <div class="py-2 px-2">
@@ -142,10 +148,24 @@
       <i class="fa-solid fa-headset"></i> Query / Complaint
     </a>
 
+    {% if session.role in ['admin', 'manager'] %}
+    <div class="nav-section">Management</div>
+    <a href="{{ url_for('edit_history') }}" class="nav-link {% if request.endpoint=='edit_history' %}active{% endif %}">
+      <i class="fa-solid fa-clock-rotate-left"></i> Edit History
+    </a>
+    {% endif %}
+
     {% if session.role == 'admin' %}
     <div class="nav-section">Admin</div>
     <a href="{{ url_for('users') }}" class="nav-link {% if 'user' in request.endpoint %}active{% endif %}">
       <i class="fa-solid fa-users-gear"></i> User Management
+    </a>
+    <!-- Backup -->
+    <a href="{{ url_for('backup_download') }}" class="nav-link" title="Download DB Backup">
+      <i class="fa-solid fa-database"></i> Download Backup
+    </a>
+    <a href="#restoreModal" class="nav-link" data-bs-toggle="modal" data-bs-target="#restoreModal">
+      <i class="fa-solid fa-upload"></i> Restore Backup
     </a>
     {% endif %}
 
@@ -183,6 +203,34 @@
     {% block content %}{% endblock %}
   </div>
 </div>
+
+<!-- RESTORE MODAL (admin only) -->
+{% if session.role == 'admin' %}
+<div class="modal fade" id="restoreModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fa-solid fa-upload me-2" style="color:#c9a84c"></i>Restore Database / डेटाबेस रिस्टोर</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" action="{{ url_for('backup_restore') }}" enctype="multipart/form-data">
+        <div class="modal-body">
+          <div class="alert alert-warning py-2" style="font-size:.85rem;">
+            <i class="fa-solid fa-triangle-exclamation me-1"></i>
+            <b>Warning:</b> This will replace the current database. Current data will be overwritten!
+          </div>
+          <label class="form-label">Upload Backup File (.db)</label>
+          <input type="file" name="backup_file" class="form-control" accept=".db" required>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-danger">Restore / रिस्टोर करें</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
 <script>

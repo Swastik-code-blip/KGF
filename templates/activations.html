@@ -3,7 +3,6 @@
 {% block page_title %}<i class="fa-solid fa-id-card me-2" style="color:#c9a84c"></i>ID Activation / आईडी एक्टिवेशन{% endblock %}
 
 {% block content %}
-<!-- SEARCH + FILTERS -->
 <div class="search-bar">
   <form method="GET" class="row g-2 align-items-end">
     <div class="col-12 col-md-4">
@@ -16,6 +15,7 @@
         <option value="DONE" {% if status=='DONE' %}selected{% endif %}>Done ✓</option>
         <option value="WRONG TOPUP" {% if status=='WRONG TOPUP' %}selected{% endif %}>Wrong Topup</option>
         <option value="PENDING" {% if status=='PENDING' %}selected{% endif %}>Pending</option>
+        <option value="HOLD" {% if status=='HOLD' %}selected{% endif %}>Hold</option>
       </select>
     </div>
     <div class="col-6 col-md-2">
@@ -33,7 +33,6 @@
   </form>
 </div>
 
-<!-- ACTION BUTTONS -->
 <div class="d-flex gap-2 mb-3 flex-wrap">
   <a href="{{ url_for('add_activation') }}" class="btn btn-sm btn-gold">
     <i class="fa-solid fa-plus"></i> Add New / नया जोड़ें
@@ -51,14 +50,13 @@
   </span>
 </div>
 
-<!-- TABLE -->
 <div class="table-card">
   <div class="table-responsive">
     <table class="table table-hover">
       <thead>
         <tr>
           <th>#</th><th>KGF ID</th><th>Name / नाम</th><th>Amount / राशि</th>
-          <th>Balance</th><th>Contact</th><th>State</th><th>Leader</th>
+          <th>Contact</th><th>State</th><th>Manager / मैनेजर</th>
           <th>Date</th><th>Status</th><th>Actions</th>
         </tr>
       </thead>
@@ -69,10 +67,9 @@
           <td><code>{{ r.kgf_id }}</code></td>
           <td><b>{{ r.member_name }}</b></td>
           <td>₹{{ '{:,.0f}'.format(r.amount or 0) }}</td>
-          <td>₹{{ '{:,.0f}'.format(r.avail_balance or 0) }}</td>
           <td>{{ r.contact }}</td>
           <td>{{ r.state }}</td>
-          <td>{{ r.leader_name or '—' }}</td>
+          <td>{{ r.manager_name or '—' }}</td>
           <td style="font-size:.8rem;">{{ r.date or '—' }}</td>
           <td>
             {% if r.status == 'DONE' %}
@@ -84,12 +81,14 @@
             {% endif %}
           </td>
           <td>
+            {% if session.role != 'agent' %}
             <a href="{{ url_for('edit_activation', rid=r.id) }}" class="btn btn-xs btn-outline-primary" style="padding:2px 8px;font-size:.78rem;">
               <i class="fa-solid fa-pen"></i>
             </a>
+            {% endif %}
             {% if session.role == 'admin' %}
             <form method="POST" action="{{ url_for('delete_activation', rid=r.id) }}" class="d-inline"
-                  onsubmit="return confirm('Delete this record?')">
+                  onsubmit="return confirm('Delete this record? / यह रिकॉर्ड हटाएं?')">
               <button class="btn btn-xs btn-outline-danger" style="padding:2px 8px;font-size:.78rem;">
                 <i class="fa-solid fa-trash"></i>
               </button>
@@ -98,7 +97,7 @@
           </td>
         </tr>
         {% else %}
-        <tr><td colspan="11" class="text-center py-5 text-muted">
+        <tr><td colspan="10" class="text-center py-5 text-muted">
           No records found / कोई रिकॉर्ड नहीं मिला
         </td></tr>
         {% endfor %}
@@ -107,7 +106,6 @@
   </div>
 </div>
 
-<!-- IMPORT MODAL -->
 <div class="modal fade" id="importModal" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
