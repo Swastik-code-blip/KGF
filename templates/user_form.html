@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}— {% if user %}Edit{% else %}Add{% endif %} User{% endblock %}
+{% block page_title %}<i class="fa-solid fa-user-gear me-2" style="color:#c9a84c"></i>{% if user %}Edit User{% else %}Add New User{% endif %}{% endblock %}
+{% block content %}
+<div class="form-card" style="max-width:500px">
+  <form method="POST">
+    <div class="row g-3">
+      <div class="col-12">
+        <label class="form-label">Username / यूज़रनेम <span class="text-danger">*</span></label>
+        <input type="text" name="username" class="form-control" required
+               value="{{ user.username if user else '' }}"
+               {% if user %}readonly{% endif %} placeholder="e.g. leader_rj">
+        {% if user %}<small class="text-muted">Username cannot be changed / यूज़रनेम बदला नहीं जा सकता</small>{% endif %}
+      </div>
+      <div class="col-12">
+        <label class="form-label">Full Name / पूरा नाम</label>
+        <input type="text" name="name" class="form-control" value="{{ user.name if user else '' }}">
+      </div>
+      <div class="col-12">
+        <label class="form-label">Role / भूमिका <span class="text-danger">*</span></label>
+        <select name="role" class="form-select" required>
+          <option value="agent" {% if user and user.role=='agent' %}selected{% endif %}>👤 Agent — Basic access</option>
+          <option value="leader" {% if user and user.role=='leader' %}selected{% endif %}>⭐ Leader — Can manage payouts</option>
+          <option value="admin" {% if user and user.role=='admin' %}selected{% endif %}>👑 Admin — Full access</option>
+        </select>
+      </div>
+      <div class="col-12">
+        <label class="form-label">
+          Password {% if user %}<small class="text-muted">(leave blank to keep current)</small>{% else %}<span class="text-danger">*</span>{% endif %}
+        </label>
+        <input type="password" name="password" class="form-control"
+               {% if not user %}required{% endif %} placeholder="Min 6 characters">
+      </div>
+    </div>
+    <div class="mt-4 d-flex gap-2">
+      <button type="submit" class="btn btn-gold px-4">
+        <i class="fa-solid fa-floppy-disk me-1"></i>{% if user %}Update{% else %}Create User{% endif %}
+      </button>
+      <a href="{{ url_for('users') }}" class="btn btn-outline-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}— {% if rec %}Edit{% else %}Add{% endif %} Cheque{% endblock %}
+{% block page_title %}<i class="fa-solid fa-money-check me-2" style="color:#c9a84c"></i>{% if rec %}Edit{% else %}New{% endif %} Cheque Record{% endblock %}
+{% block content %}
+<div class="form-card">
+  <form method="POST">
+    <div class="row g-3">
+      <div class="col-12 col-md-6">
+        <label class="form-label">Member Name / सदस्य नाम <span class="text-danger">*</span></label>
+        <input type="text" name="member_name" class="form-control" required value="{{ rec.member_name if rec else '' }}">
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label">Contact / संपर्क</label>
+        <input type="text" name="contact" class="form-control" value="{{ rec.contact if rec else '' }}">
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label">KGF ID <span class="text-danger">*</span></label>
+        <input type="text" name="kgf_id" class="form-control" required value="{{ rec.kgf_id if rec else '' }}">
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label">State / राज्य</label>
+        <input type="text" name="state" class="form-control" value="{{ rec.state if rec else '' }}">
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label">District / जिला</label>
+        <input type="text" name="dist" class="form-control" value="{{ rec.dist if rec else '' }}">
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label">Cheque Status / चेक स्थिति</label>
+        <select name="cheque_status" class="form-select">
+          <option value="Pending" {% if rec and rec.cheque_status=='Pending' %}selected{% endif %}>Pending</option>
+          <option value="Received" {% if rec and rec.cheque_status=='Received' %}selected{% endif %}>Received ✓</option>
+          <option value="Bounced" {% if rec and rec.cheque_status=='Bounced' %}selected{% endif %}>Bounced ✗</option>
+          <option value="Cleared" {% if rec and rec.cheque_status=='Cleared' %}selected{% endif %}>Cleared</option>
+        </select>
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label">Agreement Status</label>
+        <select name="agreement_status" class="form-select">
+          <option value="Pending" {% if rec and rec.agreement_status=='Pending' %}selected{% endif %}>Pending</option>
+          <option value="Signed" {% if rec and rec.agreement_status=='Signed' %}selected{% endif %}>Signed ✓</option>
+          <option value="Rejected" {% if rec and rec.agreement_status=='Rejected' %}selected{% endif %}>Rejected</option>
+        </select>
+      </div>
+      <div class="col-6 col-md-4">
+        <label class="form-label">Cheque No. / चेक नंबर</label>
+        <input type="text" name="cheque_no" class="form-control" value="{{ rec.cheque_no if rec else '' }}">
+      </div>
+      <div class="col-6 col-md-4">
+        <label class="form-label">Cheque Date / चेक तारीख</label>
+        <input type="text" name="cheque_date" class="form-control" value="{{ rec.cheque_date if rec else '' }}" placeholder="DD/MM/YYYY">
+      </div>
+      <div class="col-6 col-md-4">
+        <label class="form-label">Due Date / देय तारीख</label>
+        <input type="text" name="due_date" class="form-control" value="{{ rec.due_date if rec else '' }}" placeholder="DD/MM/YYYY">
+      </div>
+      <div class="col-6 col-md-4">
+        <label class="form-label">Package / पैकेज</label>
+        <input type="text" name="package" class="form-control" value="{{ rec.package if rec else '' }}">
+      </div>
+      <div class="col-12">
+        <label class="form-label">Remarks / टिप्पणी</label>
+        <textarea name="remarks" class="form-control" rows="2">{{ rec.remarks if rec else '' }}</textarea>
+      </div>
+    </div>
+    <div class="mt-4 d-flex gap-2">
+      <button type="submit" class="btn btn-gold px-4">
+        <i class="fa-solid fa-floppy-disk me-1"></i>{% if rec %}Update{% else %}Save{% endif %}
+      </button>
+      <a href="{{ url_for('cheques') }}" class="btn btn-outline-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

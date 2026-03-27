@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% block title %}— Dashboard{% endblock %}
+{% block page_title %}<i class="fa-solid fa-gauge-high me-2" style="color:#c9a84c"></i>Dashboard / डैशबोर्ड{% endblock %}
+
+{% block content %}
+<!-- STAT CARDS -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="stat-card bg-white">
+      <div class="stat-icon" style="background:#dbeafe;">
+        <i class="fa-solid fa-id-card" style="color:#1d4ed8"></i>
+      </div>
+      <div>
+        <div class="stat-val">{{ stats.total_activations }}</div>
+        <div class="stat-lbl">Total Activations<br>कुल एक्टिवेशन</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card bg-white">
+      <div class="stat-icon" style="background:#d1fae5;">
+        <i class="fa-solid fa-circle-check" style="color:#059669"></i>
+      </div>
+      <div>
+        <div class="stat-val" style="color:#059669">{{ stats.done }}</div>
+        <div class="stat-lbl">Completed / पूर्ण</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card bg-white">
+      <div class="stat-icon" style="background:#fef3c7;">
+        <i class="fa-solid fa-clock" style="color:#d97706"></i>
+      </div>
+      <div>
+        <div class="stat-val" style="color:#d97706">{{ stats.pending }}</div>
+        <div class="stat-lbl">Pending / बकाया</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card bg-white">
+      <div class="stat-icon" style="background:#fee2e2;">
+        <i class="fa-solid fa-headset" style="color:#dc2626"></i>
+      </div>
+      <div>
+        <div class="stat-val" style="color:#dc2626">{{ stats.open_queries }}</div>
+        <div class="stat-lbl">Open Queries / खुली शिकायतें</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-4">
+    <div class="stat-card bg-white">
+      <div class="stat-icon" style="background:#ede9fe;">
+        <i class="fa-solid fa-money-check" style="color:#7c3aed"></i>
+      </div>
+      <div>
+        <div class="stat-val">{{ stats.total_cheques }}</div>
+        <div class="stat-lbl">Cheque Records / चेक</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4">
+    <div class="stat-card bg-white">
+      <div class="stat-icon" style="background:#d1fae5;">
+        <i class="fa-solid fa-wallet" style="color:#059669"></i>
+      </div>
+      <div>
+        <div class="stat-val">{{ stats.total_payouts }}</div>
+        <div class="stat-lbl">Total Payouts / पेआउट</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4">
+    <div class="stat-card bg-white">
+      <div class="stat-icon" style="background:#e5e7eb;">
+        <i class="fa-solid fa-circle-xmark" style="color:#6b7280"></i>
+      </div>
+      <div>
+        <div class="stat-val">{{ stats.closed_queries }}</div>
+        <div class="stat-lbl">Closed Queries / बंद</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- QUICK ACTIONS -->
+<div class="row g-3 mb-4">
+  <div class="col-12">
+    <div class="bg-white rounded-3 p-3" style="box-shadow:0 2px 8px rgba(0,0,0,.06)">
+      <div class="fw-bold mb-2" style="font-size:.85rem;color:#888">QUICK ACTIONS / त्वरित कार्य</div>
+      <div class="d-flex flex-wrap gap-2">
+        <a href="{{ url_for('add_activation') }}" class="btn btn-sm btn-gold">
+          <i class="fa-solid fa-plus me-1"></i>New Activation
+        </a>
+        <a href="{{ url_for('add_cheque') }}" class="btn btn-sm btn-outline-secondary">
+          <i class="fa-solid fa-plus me-1"></i>New Cheque
+        </a>
+        <a href="{{ url_for('add_payout') }}" class="btn btn-sm btn-outline-secondary">
+          <i class="fa-solid fa-plus me-1"></i>New Payout
+        </a>
+        <a href="{{ url_for('add_query') }}" class="btn btn-sm btn-outline-danger">
+          <i class="fa-solid fa-plus me-1"></i>Log Query
+        </a>
+        {% if session.role == 'admin' %}
+        <a href="{{ url_for('activations') }}" class="btn btn-sm btn-outline-primary">
+          <i class="fa-solid fa-file-import me-1"></i>Import Excel
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RECENT ACTIVATIONS -->
+<div class="table-card">
+  <div class="d-flex align-items-center justify-content-between p-3">
+    <div class="fw-bold">Recent Activations / हाल के एक्टिवेशन</div>
+    <a href="{{ url_for('activations') }}" class="btn btn-sm btn-gold">View All</a>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>KGF ID</th><th>Name / नाम</th><th>Amount / राशि</th>
+          <th>Leader / लीडर</th><th>State / राज्य</th><th>Status / स्थिति</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in recent %}
+        <tr>
+          <td><code>{{ r.kgf_id }}</code></td>
+          <td>{{ r.member_name }}</td>
+          <td>₹{{ '{:,.0f}'.format(r.amount or 0) }}</td>
+          <td>{{ r.leader_name or '—' }}</td>
+          <td>{{ r.state or '—' }}</td>
+          <td>
+            {% if r.status == 'DONE' %}
+              <span class="status-badge badge-done">✓ Done</span>
+            {% elif r.status == 'WRONG TOPUP' %}
+              <span class="status-badge badge-wrong">✗ Wrong Topup</span>
+            {% else %}
+              <span class="status-badge badge-pending">⏳ {{ r.status }}</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center py-4 text-muted">No records yet / अभी कोई रिकॉर्ड नहीं</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block title %}— {% if rec %}Edit{% else %}Add{% endif %} Query{% endblock %}
+{% block page_title %}<i class="fa-solid fa-headset me-2" style="color:#c9a84c"></i>{% if rec %}Edit{% else %}Log New{% endif %} Query{% endblock %}
+{% block content %}
+<div class="form-card">
+  <form method="POST">
+    <div class="row g-3">
+      <div class="col-12 col-md-6">
+        <label class="form-label">Member Name / सदस्य नाम</label>
+        <input type="text" name="member_name" class="form-control" value="{{ rec.member_name if rec else '' }}">
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label">Contact / संपर्क</label>
+        <input type="text" name="contact" class="form-control" value="{{ rec.contact if rec else '' }}">
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label">Date / तारीख</label>
+        <input type="date" name="date" class="form-control" value="{{ rec.date if rec else '' }}">
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label">State / राज्य</label>
+        <input type="text" name="state" class="form-control" value="{{ rec.state if rec else '' }}">
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label">District / जिला</label>
+        <input type="text" name="dist" class="form-control" value="{{ rec.dist if rec else '' }}">
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label">Query Type / प्रकार</label>
+        <select name="query_type" class="form-select">
+          <option value="">Select...</option>
+          <option value="Payment Issue" {% if rec and rec.query_type=='Payment Issue' %}selected{% endif %}>Payment Issue</option>
+          <option value="Activation Issue" {% if rec and rec.query_type=='Activation Issue' %}selected{% endif %}>Activation Issue</option>
+          <option value="Cheque Issue" {% if rec and rec.query_type=='Cheque Issue' %}selected{% endif %}>Cheque Issue</option>
+          <option value="Payout Issue" {% if rec and rec.query_type=='Payout Issue' %}selected{% endif %}>Payout Issue</option>
+          <option value="Other" {% if rec and rec.query_type=='Other' %}selected{% endif %}>Other / अन्य</option>
+        </select>
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label">Status / स्थिति</label>
+        <select name="status" class="form-select">
+          <option value="open" {% if not rec or rec.status=='open' %}selected{% endif %}>🔵 Open</option>
+          <option value="close" {% if rec and rec.status=='close' %}selected{% endif %}>⚫ Closed</option>
+        </select>
+      </div>
+      <div class="col-6 col-md-6">
+        <label class="form-label">Call Attender / कॉल अटेंडर</label>
+        <input type="text" name="call_attender" class="form-control" value="{{ rec.call_attender if rec else '' }}">
+      </div>
+      <div class="col-6 col-md-6">
+        <label class="form-label">Department / विभाग</label>
+        <input type="text" name="department" class="form-control" value="{{ rec.department if rec else '' }}" placeholder="Support / Accounts / Field...">
+      </div>
+      <div class="col-12">
+        <label class="form-label">Remarks / टिप्पणी</label>
+        <textarea name="remarks" class="form-control" rows="2">{{ rec.remarks if rec else '' }}</textarea>
+      </div>
+
+      <div class="col-12"><hr><b style="font-size:.85rem;color:#888;">FOLLOW-UPS / फॉलो-अप</b></div>
+      <div class="col-12 col-md-4">
+        <label class="form-label">Follow-up 1</label>
+        <input type="text" name="followup1" class="form-control" value="{{ rec.followup1 if rec else '' }}">
+      </div>
+      <div class="col-12 col-md-4">
+        <label class="form-label">Follow-up 2</label>
+        <input type="text" name="followup2" class="form-control" value="{{ rec.followup2 if rec else '' }}">
+      </div>
+      <div class="col-12 col-md-4">
+        <label class="form-label">Follow-up 3</label>
+        <input type="text" name="followup3" class="form-control" value="{{ rec.followup3 if rec else '' }}">
+      </div>
+    </div>
+    <div class="mt-4 d-flex gap-2">
+      <button type="submit" class="btn btn-gold px-4">
+        <i class="fa-solid fa-floppy-disk me-1"></i>{% if rec %}Update{% else %}Save{% endif %}
+      </button>
+      <a href="{{ url_for('queries') }}" class="btn btn-outline-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

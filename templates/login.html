@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KGF Portal — Login</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    body {
+      min-height: 100vh; margin: 0;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      display: flex; align-items: center; justify-content: center; font-family: 'Segoe UI', sans-serif;
+    }
+    .login-card {
+      background: #fff; border-radius: 20px; padding: 2.5rem 2rem;
+      width: 100%; max-width: 400px; box-shadow: 0 20px 60px rgba(0,0,0,.4);
+    }
+    .logo { text-align: center; margin-bottom: 1.5rem; }
+    .logo .crown { font-size: 3rem; color: #c9a84c; }
+    .logo h4 { font-weight: 800; color: #1a1a2e; margin: .3rem 0 .1rem; }
+    .logo p { color: #888; font-size: .85rem; margin: 0; }
+    .form-label { font-weight: 600; font-size: .85rem; color: #444; }
+    .form-control { border-radius: 10px; padding: .65rem 1rem; }
+    .form-control:focus { border-color: #c9a84c; box-shadow: 0 0 0 .2rem rgba(201,168,76,.2); }
+    .btn-login {
+      background: linear-gradient(135deg, #c9a84c, #b8962e);
+      border: none; border-radius: 10px; padding: .7rem;
+      font-weight: 700; font-size: 1rem; color: #1a1a2e; width: 100%;
+      transition: all .2s;
+    }
+    .btn-login:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(201,168,76,.4); }
+    .input-group-text { background: #f8f9fa; border-radius: 10px 0 0 10px; border-color: #dee2e6; }
+    .alert { border-radius: 10px; font-size: .85rem; }
+    .footer-txt { text-align: center; font-size: .75rem; color: #aaa; margin-top: 1.5rem; }
+  </style>
+</head>
+<body>
+<div class="login-card">
+  <div class="logo">
+    <div class="crown"><i class="fa-solid fa-crown"></i></div>
+    <h4>KGF Portal</h4>
+    <p>Registration Management System<br>पंजीकरण प्रबंधन प्रणाली</p>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+      <div class="alert alert-{{ cat }} py-2">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <form method="POST">
+    <div class="mb-3">
+      <label class="form-label">Username / यूज़रनेम</label>
+      <div class="input-group">
+        <span class="input-group-text"><i class="fa-solid fa-user" style="color:#c9a84c"></i></span>
+        <input type="text" name="username" class="form-control" placeholder="Enter username" required autofocus>
+      </div>
+    </div>
+    <div class="mb-4">
+      <label class="form-label">Password / पासवर्ड</label>
+      <div class="input-group">
+        <span class="input-group-text"><i class="fa-solid fa-lock" style="color:#c9a84c"></i></span>
+        <input type="password" name="password" id="pw" class="form-control" placeholder="Enter password" required>
+        <button type="button" class="btn btn-outline-secondary" onclick="togglePw()">
+          <i class="fa-solid fa-eye" id="eye"></i>
+        </button>
+      </div>
+    </div>
+    <button type="submit" class="btn-login">
+      <i class="fa-solid fa-right-to-bracket me-2"></i>Login / प्रवेश करें
+    </button>
+  </form>
+  <div class="footer-txt">KGF Registration Portal &copy; 2025</div>
+</div>
+<script>
+function togglePw(){
+  const pw=document.getElementById('pw'), eye=document.getElementById('eye');
+  pw.type=pw.type==='password'?'text':'password';
+  eye.className=pw.type==='password'?'fa-solid fa-eye':'fa-solid fa-eye-slash';
+}
+</script>
+</body>
+</html>

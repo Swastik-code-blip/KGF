@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KGF Portal {% block title %}{% endblock %}</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    :root {
+      --kgf-gold: #c9a84c;
+      --kgf-dark: #1a1a2e;
+      --kgf-mid:  #16213e;
+      --kgf-blue: #0f3460;
+      --sidebar-w: 240px;
+    }
+    body { background: #f0f2f5; font-family: 'Segoe UI', sans-serif; }
+
+    /* SIDEBAR */
+    #sidebar {
+      position: fixed; top: 0; left: 0; height: 100vh; width: var(--sidebar-w);
+      background: var(--kgf-dark); z-index: 1000; overflow-y: auto;
+      transition: transform .3s;
+    }
+    .sidebar-brand {
+      padding: 1.2rem 1rem; background: var(--kgf-blue);
+      border-bottom: 2px solid var(--kgf-gold);
+    }
+    .sidebar-brand h5 { color: var(--kgf-gold); margin: 0; font-weight: 700; }
+    .sidebar-brand small { color: #aaa; font-size: 0.7rem; }
+    .nav-section { color: #888; font-size: 0.68rem; letter-spacing: 1px;
+                   padding: .7rem 1rem .2rem; text-transform: uppercase; }
+    #sidebar .nav-link {
+      color: #ccc; padding: .5rem 1rem; border-radius: 6px; margin: 1px 8px;
+      display: flex; align-items: center; gap: 10px; transition: all .2s;
+    }
+    #sidebar .nav-link:hover, #sidebar .nav-link.active {
+      background: var(--kgf-blue); color: var(--kgf-gold);
+    }
+    #sidebar .nav-link i { width: 18px; text-align: center; }
+    .role-badge {
+      display: inline-block; font-size: 0.65rem; padding: 2px 7px;
+      border-radius: 20px; background: var(--kgf-gold); color: #111;
+      font-weight: 700; text-transform: uppercase;
+    }
+
+    /* MAIN */
+    #main { margin-left: var(--sidebar-w); min-height: 100vh; }
+    .topbar {
+      background: #fff; padding: .7rem 1.5rem;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 900;
+    }
+    .topbar h6 { margin: 0; font-weight: 600; color: var(--kgf-dark); }
+    .content { padding: 1.5rem; }
+
+    /* CARDS */
+    .stat-card {
+      border: none; border-radius: 12px; padding: 1.2rem;
+      display: flex; align-items: center; gap: 1rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    }
+    .stat-icon {
+      width: 54px; height: 54px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; flex-shrink: 0;
+    }
+    .stat-val { font-size: 1.8rem; font-weight: 700; line-height: 1; }
+    .stat-lbl { font-size: .78rem; color: #888; margin-top: 2px; }
+
+    /* TABLE */
+    .table-card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+    .table-card .table { margin: 0; }
+    .table thead th { background: var(--kgf-dark); color: #ddd; font-size: .8rem;
+                      font-weight: 600; border: none; letter-spacing: .3px; }
+    .table tbody tr:hover { background: #f8f9ff; }
+    .table-card .table td { vertical-align: middle; font-size: .85rem; border-color: #f0f0f0; }
+
+    /* STATUS BADGES */
+    .badge-done    { background: #d1fae5; color: #065f46; }
+    .badge-pending { background: #fef3c7; color: #92400e; }
+    .badge-wrong   { background: #fee2e2; color: #991b1b; }
+    .badge-open    { background: #dbeafe; color: #1e40af; }
+    .badge-close   { background: #e5e7eb; color: #374151; }
+    .status-badge  { padding: 3px 10px; border-radius: 20px; font-size: .75rem; font-weight: 600; }
+
+    /* FORMS */
+    .form-card { background: #fff; border-radius: 12px; padding: 2rem; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+    .form-label { font-weight: 600; font-size: .85rem; color: #444; }
+    .form-control, .form-select { border-radius: 8px; font-size: .9rem; }
+
+    /* SEARCH BAR */
+    .search-bar { background: #fff; border-radius: 10px; padding: .8rem 1rem;
+                  box-shadow: 0 1px 4px rgba(0,0,0,.06); margin-bottom: 1rem; }
+
+    /* MOBILE */
+    @media (max-width: 768px) {
+      #sidebar { transform: translateX(-100%); }
+      #sidebar.open { transform: translateX(0); }
+      #main { margin-left: 0; }
+    }
+
+    .btn-gold { background: var(--kgf-gold); color: #111; border: none; font-weight: 600; }
+    .btn-gold:hover { background: #b8962e; color: #111; }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div class="sidebar-brand">
+    <h5><i class="fa-solid fa-crown me-2"></i>KGF Portal</h5>
+    <small>Registration Management System</small>
+  </div>
+
+  <div class="py-2 px-2">
+    <div class="d-flex align-items-center gap-2 p-2 mt-1 mb-2" style="background:#ffffff12;border-radius:8px;">
+      <i class="fa-solid fa-circle-user fa-xl" style="color:var(--kgf-gold)"></i>
+      <div>
+        <div style="color:#fff;font-size:.85rem;font-weight:600;">{{ session.name or session.username }}</div>
+        <span class="role-badge">{{ session.role }}</span>
+      </div>
+    </div>
+
+    <div class="nav-section">Main / मुख्य</div>
+    <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint=='dashboard' %}active{% endif %}">
+      <i class="fa-solid fa-gauge-high"></i> Dashboard
+    </a>
+
+    <div class="nav-section">Modules / मॉड्यूल</div>
+    <a href="{{ url_for('activations') }}" class="nav-link {% if 'activation' in request.endpoint %}active{% endif %}">
+      <i class="fa-solid fa-id-card"></i> ID Activation
+    </a>
+    <a href="{{ url_for('cheques') }}" class="nav-link {% if 'cheque' in request.endpoint %}active{% endif %}">
+      <i class="fa-solid fa-money-check"></i> Cheque &amp; Agreement
+    </a>
+    <a href="{{ url_for('payouts') }}" class="nav-link {% if 'payout' in request.endpoint %}active{% endif %}">
+      <i class="fa-solid fa-wallet"></i> Payout Status
+    </a>
+    <a href="{{ url_for('queries') }}" class="nav-link {% if 'quer' in request.endpoint %}active{% endif %}">
+      <i class="fa-solid fa-headset"></i> Query / Complaint
+    </a>
+
+    {% if session.role == 'admin' %}
+    <div class="nav-section">Admin</div>
+    <a href="{{ url_for('users') }}" class="nav-link {% if 'user' in request.endpoint %}active{% endif %}">
+      <i class="fa-solid fa-users-gear"></i> User Management
+    </a>
+    {% endif %}
+
+    <div class="nav-section" style="margin-top:1rem;"></div>
+    <a href="{{ url_for('logout') }}" class="nav-link text-danger">
+      <i class="fa-solid fa-right-from-bracket"></i> Logout / बाहर जाएं
+    </a>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <div class="topbar">
+    <div class="d-flex align-items-center gap-2">
+      <button class="btn btn-sm d-md-none" onclick="document.getElementById('sidebar').classList.toggle('open')">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+      <h6>{% block page_title %}{% endblock %}</h6>
+    </div>
+    <div style="font-size:.8rem;color:#999;">
+      <i class="fa-regular fa-calendar me-1"></i>
+      <span id="dt"></span>
+    </div>
+  </div>
+
+  <div class="content">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}
+        <div class="alert alert-{{ cat }} alert-dismissible fade show py-2" role="alert">
+          {{ msg }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+<script>
+  const dt = document.getElementById('dt');
+  if(dt) dt.textContent = new Date().toLocaleDateString('hi-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

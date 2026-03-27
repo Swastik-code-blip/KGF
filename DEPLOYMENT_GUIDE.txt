@@ -1,0 +1,139 @@
+# KGF Portal — PythonAnywhere Deployment Guide
+# हिंदी + English — Step-by-Step
+
+============================================================
+  DEFAULT LOGIN (पहली बार login करें)
+  Username: admin
+  Password: admin123
+  ⚠️ Login ke baad password zaroor badlein!
+============================================================
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 1 — FILES UPLOAD KARNA / Upload the ZIP
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. PythonAnywhere.com pe login karein
+2. Top menu mein "Files" tab pe click karein
+3. Right side mein "Upload a file" button se kgf_portal.zip upload karein
+   → File yahan jayegi: /home/YOUR_USERNAME/kgf_portal.zip
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 2 — BASH CONSOLE MEIN UNZIP + SETUP
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+"Consoles" tab pe jayen → "Bash" console kholein
+Yeh commands ek-ek karke run karein:
+
+  cd ~
+  unzip kgf_portal.zip
+  cd kgf_portal
+  pip3 install --user -r requirements.txt
+
+✓ Sab install ho jayega (2-3 minute lagenge)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 3 — WEB APP BANANA / Create Web App
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. "Web" tab pe click karein
+2. "Add a new web app" button dabayein
+3. "Next" → "Flask" → "Python 3.10" → "Next"
+4. Path poochega — yahan likhein:
+   /home/YOUR_USERNAME/kgf_portal/app.py
+5. "Next" karein
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 4 — WSGI FILE EDIT KARNA (IMPORTANT!)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Web tab mein "WSGI configuration file" link dikhega
+(something like: /var/www/USERNAME_pythonanywhere_com_wsgi.py)
+
+Us file pe click karein aur SARA content DELETE karein.
+Phir yeh paste karein (YOUR_USERNAME apna username se replace karein):
+
+------------------------------------------------------------
+import sys, os
+project_home = '/home/YOUR_USERNAME/kgf_portal'
+if project_home not in sys.path:
+    sys.path.insert(0, project_home)
+os.environ['FLASK_ENV'] = 'production'
+from app import app, init_db
+init_db()
+application = app
+------------------------------------------------------------
+
+"Save" button dabayein.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 5 — STATIC FILES SETUP
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Web tab mein neeche "Static files" section mein:
+  URL:        /static/
+  Directory:  /home/YOUR_USERNAME/kgf_portal/static
+
+"Save" karein.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 6 — RELOAD & TEST
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Web tab pe wapas jayen →
+Green "Reload" button dabayein ✓
+
+Phir apna portal kholein:
+  https://YOUR_USERNAME.pythonanywhere.com
+
+Login karein:
+  Username: admin
+  Password: admin123
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PEHLE KAAM / First Things To Do After Login
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Users → admin ka password badlein (User Management)
+2. Users → Leader aur Agent accounts banayein
+3. ID Activation → Import Excel button se apna
+   Registration_status.xlsx import karein
+4. Dashboard pe saara data dikhai dega ✓
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ROLES KI JAANKAARI / Role Permissions
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  👑 Admin   → Sab kuch dekh sakta hai, delete kar sakta hai,
+               users manage kar sakta hai, Excel import kar sakta hai
+  ⭐ Leader  → Data dekh sakta hai, add/edit kar sakta hai,
+               Payouts add/edit kar sakta hai
+  👤 Agent   → Data dekh sakta hai, query/activation add kar sakta hai
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PROBLEM AAYE TOH / Troubleshooting
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Error log dekhne ke liye:
+  Web tab → "Error log" link
+
+500 Error aaye toh:
+  Bash console mein check karein:
+    cd ~/kgf_portal && python3 app.py
+
+Import nahi ho raha:
+  Excel file mein sheet name "ID ACTIVATION" hona chahiye
+  (exact spelling, capital letters)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FREE ACCOUNT LIMITS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✓ 1 web app
+✓ SQLite database (no limit on records)
+✓ 512 MB storage
+⚠️ Har 3 mahine mein ek baar manually "Reload" karna padta hai
+   (PythonAnywhere reminder email bhejta hai)
+
+============================================================
+  Support chahiye? Apna error message share karein!
+============================================================

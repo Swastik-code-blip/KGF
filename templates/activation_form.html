@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block title %}— {% if rec %}Edit{% else %}Add{% endif %} Activation{% endblock %}
+{% block page_title %}
+  <i class="fa-solid fa-id-card me-2" style="color:#c9a84c"></i>
+  {% if rec %}Edit Activation / संपादन{% else %}New Activation / नया एक्टिवेशन{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="form-card">
+  <form method="POST">
+    <div class="row g-3">
+      <div class="col-6 col-md-2">
+        <label class="form-label">S.No</label>
+        <input type="number" name="kgf_serial" class="form-control" value="{{ rec.kgf_serial if rec else '' }}">
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label">KGF ID <span class="text-danger">*</span></label>
+        <input type="text" name="kgf_id" class="form-control" required
+               value="{{ rec.kgf_id if rec else '' }}" placeholder="KGF123456">
+      </div>
+      <div class="col-12 col-md-7">
+        <label class="form-label">Member Name / सदस्य नाम <span class="text-danger">*</span></label>
+        <input type="text" name="member_name" class="form-control" required
+               value="{{ rec.member_name if rec else '' }}">
+      </div>
+
+      <div class="col-6 col-md-4">
+        <label class="form-label">Contact No. / संपर्क</label>
+        <input type="text" name="contact" class="form-control" value="{{ rec.contact if rec else '' }}">
+      </div>
+      <div class="col-6 col-md-4">
+        <label class="form-label">State / राज्य</label>
+        <input type="text" name="state" class="form-control" value="{{ rec.state if rec else '' }}" placeholder="RJ / MP / HR...">
+      </div>
+      <div class="col-6 col-md-4">
+        <label class="form-label">District / जिला</label>
+        <input type="text" name="dist" class="form-control" value="{{ rec.dist if rec else '' }}">
+      </div>
+
+      <div class="col-6 col-md-4">
+        <label class="form-label">Amount / राशि (₹)</label>
+        <input type="number" name="amount" class="form-control" value="{{ rec.amount if rec else '' }}">
+      </div>
+      <div class="col-6 col-md-4">
+        <label class="form-label">Topup Amount / टॉपअप</label>
+        <input type="number" name="topup_amount" class="form-control" value="{{ rec.topup_amount if rec else '' }}">
+      </div>
+      <div class="col-6 col-md-4">
+        <label class="form-label">Available Balance / उपलब्ध राशि</label>
+        <input type="number" name="avail_balance" class="form-control" value="{{ rec.avail_balance if rec else '' }}">
+      </div>
+
+      <div class="col-6 col-md-4">
+        <label class="form-label">Status / स्थिति <span class="text-danger">*</span></label>
+        <select name="status" class="form-select" required>
+          <option value="DONE" {% if rec and rec.status=='DONE' %}selected{% endif %}>✓ DONE</option>
+          <option value="PENDING" {% if rec and rec.status=='PENDING' %}selected{% endif %}>PENDING</option>
+          <option value="WRONG TOPUP" {% if rec and rec.status=='WRONG TOPUP' %}selected{% endif %}>WRONG TOPUP</option>
+          <option value="HOLD" {% if rec and rec.status=='HOLD' %}selected{% endif %}>HOLD</option>
+        </select>
+      </div>
+      <div class="col-6 col-md-4">
+        <label class="form-label">Payment Mode / भुगतान</label>
+        <input type="text" name="payments" class="form-control"
+               value="{{ rec.payments if rec else '' }}" placeholder="HDFC / SBI / UPI...">
+      </div>
+      <div class="col-6 col-md-4">
+        <label class="form-label">Date / तारीख</label>
+        <input type="date" name="date" class="form-control"
+               value="{{ rec.date if rec else '' }}">
+      </div>
+
+      <div class="col-12 col-md-6">
+        <label class="form-label">Leader Name / लीडर नाम</label>
+        <input type="text" name="leader_name" class="form-control" value="{{ rec.leader_name if rec else '' }}">
+      </div>
+      <div class="col-12 col-md-6">
+        <label class="form-label">Pay Confirmed By / किसने कन्फर्म किया</label>
+        <input type="text" name="pay_confirm_by" class="form-control" value="{{ rec.pay_confirm_by if rec else '' }}">
+      </div>
+
+      <div class="col-12">
+        <label class="form-label">UTR No. / यूटीआर नंबर</label>
+        <input type="text" name="utr_no" class="form-control" value="{{ rec.utr_no if rec else '' }}">
+      </div>
+      <div class="col-6 col-md-6">
+        <label class="form-label">Payment Date / भुगतान तारीख</label>
+        <input type="text" name="payment_date" class="form-control" value="{{ rec.payment_date if rec else '' }}">
+      </div>
+      <div class="col-6 col-md-6">
+        <label class="form-label">Remark / टिप्पणी</label>
+        <input type="text" name="remark" class="form-control" value="{{ rec.remark if rec else '' }}">
+      </div>
+    </div>
+
+    <div class="mt-4 d-flex gap-2">
+      <button type="submit" class="btn btn-gold px-4">
+        <i class="fa-solid fa-floppy-disk me-1"></i>
+        {% if rec %}Update / अपडेट करें{% else %}Save / सहेजें{% endif %}
+      </button>
+      <a href="{{ url_for('activations') }}" class="btn btn-outline-secondary">Cancel / रद्द करें</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

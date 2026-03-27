@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% block title %}— ID Activation{% endblock %}
+{% block page_title %}<i class="fa-solid fa-id-card me-2" style="color:#c9a84c"></i>ID Activation / आईडी एक्टिवेशन{% endblock %}
+
+{% block content %}
+<!-- SEARCH + FILTERS -->
+<div class="search-bar">
+  <form method="GET" class="row g-2 align-items-end">
+    <div class="col-12 col-md-4">
+      <input type="text" name="q" value="{{ q }}" class="form-control form-control-sm"
+             placeholder="Search ID / Name / Contact... खोजें">
+    </div>
+    <div class="col-6 col-md-2">
+      <select name="status" class="form-select form-select-sm">
+        <option value="">All Status</option>
+        <option value="DONE" {% if status=='DONE' %}selected{% endif %}>Done ✓</option>
+        <option value="WRONG TOPUP" {% if status=='WRONG TOPUP' %}selected{% endif %}>Wrong Topup</option>
+        <option value="PENDING" {% if status=='PENDING' %}selected{% endif %}>Pending</option>
+      </select>
+    </div>
+    <div class="col-6 col-md-2">
+      <select name="state" class="form-select form-select-sm">
+        <option value="">All States</option>
+        {% for s in states %}
+        <option value="{{ s }}" {% if state==s %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-auto">
+      <button class="btn btn-sm btn-gold"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+      <a href="{{ url_for('activations') }}" class="btn btn-sm btn-outline-secondary">Reset</a>
+    </div>
+  </form>
+</div>
+
+<!-- ACTION BUTTONS -->
+<div class="d-flex gap-2 mb-3 flex-wrap">
+  <a href="{{ url_for('add_activation') }}" class="btn btn-sm btn-gold">
+    <i class="fa-solid fa-plus"></i> Add New / नया जोड़ें
+  </a>
+  <a href="{{ url_for('export_activations') }}" class="btn btn-sm btn-outline-success">
+    <i class="fa-solid fa-file-excel"></i> Export Excel
+  </a>
+  {% if session.role == 'admin' %}
+  <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#importModal">
+    <i class="fa-solid fa-file-import"></i> Import Excel
+  </button>
+  {% endif %}
+  <span class="ms-auto text-muted" style="font-size:.82rem;align-self:center;">
+    {{ records|length }} records / रिकॉर्ड
+  </span>
+</div>
+
+<!-- TABLE -->
+<div class="table-card">
+  <div class="table-responsive">
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>#</th><th>KGF ID</th><th>Name / नाम</th><th>Amount / राशि</th>
+          <th>Balance</th><th>Contact</th><th>State</th><th>Leader</th>
+          <th>Date</th><th>Status</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in records %}
+        <tr>
+          <td>{{ r.kgf_serial or r.id }}</td>
+          <td><code>{{ r.kgf_id }}</code></td>
+          <td><b>{{ r.member_name }}</b></td>
+          <td>₹{{ '{:,.0f}'.format(r.amount or 0) }}</td>
+          <td>₹{{ '{:,.0f}'.format(r.avail_balance or 0) }}</td>
+          <td>{{ r.contact }}</td>
+          <td>{{ r.state }}</td>
+          <td>{{ r.leader_name or '—' }}</td>
+          <td style="font-size:.8rem;">{{ r.date or '—' }}</td>
+          <td>
+            {% if r.status == 'DONE' %}
+              <span class="status-badge badge-done">✓ Done</span>
+            {% elif r.status == 'WRONG TOPUP' %}
+              <span class="status-badge badge-wrong">✗ Wrong</span>
+            {% else %}
+              <span class="status-badge badge-pending">{{ r.status }}</span>
+            {% endif %}
+          </td>
+          <td>
+            <a href="{{ url_for('edit_activation', rid=r.id) }}" class="btn btn-xs btn-outline-primary" style="padding:2px 8px;font-size:.78rem;">
+              <i class="fa-solid fa-pen"></i>
+            </a>
+            {% if session.role == 'admin' %}
+            <form method="POST" action="{{ url_for('delete_activation', rid=r.id) }}" class="d-inline"
+                  onsubmit="return confirm('Delete this record?')">
+              <button class="btn btn-xs btn-outline-danger" style="padding:2px 8px;font-size:.78rem;">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="11" class="text-center py-5 text-muted">
+          No records found / कोई रिकॉर्ड नहीं मिला
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- IMPORT MODAL -->
+<div class="modal fade" id="importModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fa-solid fa-file-import me-2" style="color:#c9a84c"></i>Import Excel</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" action="{{ url_for('import_activations') }}" enctype="multipart/form-data">
+        <div class="modal-body">
+          <p class="text-muted small">Upload your <b>Registration_status.xlsx</b> file. Sheet name must be <code>ID ACTIVATION</code>.</p>
+          <input type="file" name="file" class="form-control" accept=".xlsx,.xls" required>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-gold">Import / आयात करें</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

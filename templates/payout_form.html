@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}— {% if rec %}Edit{% else %}Add{% endif %} Payout{% endblock %}
+{% block page_title %}<i class="fa-solid fa-wallet me-2" style="color:#c9a84c"></i>{% if rec %}Edit{% else %}New{% endif %} Payout{% endblock %}
+{% block content %}
+<div class="form-card">
+  <form method="POST">
+    <div class="row g-3">
+      <div class="col-12 col-md-6">
+        <label class="form-label">Beneficiary Name / लाभार्थी नाम <span class="text-danger">*</span></label>
+        <input type="text" name="benf_name" class="form-control" required value="{{ rec.benf_name if rec else '' }}">
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label">User ID / यूज़र आईडी <span class="text-danger">*</span></label>
+        <input type="text" name="userid" class="form-control" required value="{{ rec.userid if rec else '' }}" placeholder="KGF123456">
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label">Amount / राशि (₹)</label>
+        <input type="number" name="amount" class="form-control" value="{{ rec.amount if rec else '' }}">
+      </div>
+      <div class="col-12 col-md-6">
+        <label class="form-label">Account Number / खाता नंबर</label>
+        <input type="text" name="acc_no" class="form-control" value="{{ rec.acc_no if rec else '' }}">
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label">IFSC Code</label>
+        <input type="text" name="ifsc" class="form-control" value="{{ rec.ifsc if rec else '' }}" placeholder="HDFC0001234">
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label">Bank / बैंक</label>
+        <input type="text" name="bank" class="form-control" value="{{ rec.bank if rec else '' }}" placeholder="HDFC / SBI...">
+      </div>
+      <div class="col-6 col-md-4">
+        <label class="form-label">Payment Date / भुगतान तारीख</label>
+        <input type="text" name="pymt_date" class="form-control" value="{{ rec.pymt_date if rec else '' }}" placeholder="DD/MM/YYYY">
+      </div>
+      <div class="col-6 col-md-4">
+        <label class="form-label">Status / स्थिति</label>
+        <select name="status" class="form-select">
+          <option value="Pending" {% if rec and rec.status=='Pending' %}selected{% endif %}>Pending</option>
+          <option value="Processed" {% if rec and rec.status=='Processed' %}selected{% endif %}>Processed ✓</option>
+          <option value="Failed" {% if rec and rec.status=='Failed' %}selected{% endif %}>Failed ✗</option>
+        </select>
+      </div>
+      <div class="col-6 col-md-4">
+        <label class="form-label">UTR No.</label>
+        <input type="text" name="utr" class="form-control" value="{{ rec.utr if rec else '' }}">
+      </div>
+      <div class="col-12">
+        <label class="form-label">Remarks / टिप्पणी</label>
+        <textarea name="remarks" class="form-control" rows="2">{{ rec.remarks if rec else '' }}</textarea>
+      </div>
+    </div>
+    <div class="mt-4 d-flex gap-2">
+      <button type="submit" class="btn btn-gold px-4">
+        <i class="fa-solid fa-floppy-disk me-1"></i>{% if rec %}Update{% else %}Save{% endif %}
+      </button>
+      <a href="{{ url_for('payouts') }}" class="btn btn-outline-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
